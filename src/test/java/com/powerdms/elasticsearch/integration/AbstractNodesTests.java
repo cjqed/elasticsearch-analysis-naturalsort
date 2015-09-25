@@ -1,4 +1,4 @@
-package org.xbib.elasticsearch.integration;
+package com.powerdms.elasticsearch.integration;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;

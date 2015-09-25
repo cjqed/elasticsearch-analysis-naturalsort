@@ -1,4 +1,4 @@
-package org.xbib.elasticsearch.index.analysis.naturalsort;
+package com.powerdms.elasticsearch.index.analysis.naturalsort;
 
 import org.elasticsearch.index.analysis.AnalysisModule;
 

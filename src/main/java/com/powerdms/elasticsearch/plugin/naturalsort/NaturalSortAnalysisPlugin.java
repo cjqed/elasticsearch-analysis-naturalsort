@@ -1,8 +1,8 @@
-package org.xbib.elasticsearch.plugin.naturalsort;
+package com.powerdms.elasticsearch.plugin.naturalsort;
 
 import org.elasticsearch.index.analysis.AnalysisModule;
 import org.elasticsearch.plugins.AbstractPlugin;
-import org.xbib.elasticsearch.index.analysis.naturalsort.NaturalSortAnalysisBinderProcessor;
+import com.powerdms.elasticsearch.index.analysis.naturalsort.NaturalSortAnalysisBinderProcessor;
 
 public class NaturalSortAnalysisPlugin extends AbstractPlugin {
 

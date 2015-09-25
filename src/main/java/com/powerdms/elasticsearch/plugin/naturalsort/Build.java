@@ -1,4 +1,4 @@
-package org.xbib.elasticsearch.plugin.naturalsort;
+package com.powerdms.elasticsearch.plugin.naturalsort;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
