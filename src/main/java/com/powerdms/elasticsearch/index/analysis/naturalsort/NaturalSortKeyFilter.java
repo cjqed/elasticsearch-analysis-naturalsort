@@ -6,13 +6,17 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.IndexableBinaryStringTools;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.Collator;
-import java.util.regex.Pattern;
+import java.util.Arrays;
 
 
 public final class NaturalSortKeyFilter extends TokenFilter {
 
-    private final int MAX_NUM_DIGITS_IN_DIGIT_RUN = 15;
+    private final int MAX_NUM_DIGITS_IN_DIGIT_RUN = 20;
+    private final int SPACE_CHARACTER = 32;
+    private final int MAX_LENGTH = 26000;
 
     private final Collator collator;
     private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
@@ -29,7 +33,7 @@ public final class NaturalSortKeyFilter extends TokenFilter {
     @Override
     public boolean incrementToken() throws IOException {
         if (input.incrementToken()) {
-            byte[] collationKey = collator.getCollationKey(natural(termAtt.toString())).toByteArray();
+            byte[] collationKey = natural(termAtt.toString());
             int encodedLength = IndexableBinaryStringTools.getEncodedLength(collationKey, 0, collationKey.length);
             termAtt.resizeBuffer(encodedLength);
             termAtt.setLength(encodedLength);
@@ -40,10 +44,10 @@ public final class NaturalSortKeyFilter extends TokenFilter {
         }
     }
 
-    private String natural(String s) {
+    private byte[] natural(String s) throws UnsupportedEncodingException {
         if (s == null || s.isEmpty())
         {
-            return "";
+            return new byte[0];
         }
         boolean isInDigitRun = false;
         StringBuilder digitRun = new StringBuilder(MAX_NUM_DIGITS_IN_DIGIT_RUN);
@@ -51,7 +55,7 @@ public final class NaturalSortKeyFilter extends TokenFilter {
         char[] chars = s.toLowerCase().toCharArray();
         for (char character : chars)
         {
-            boolean newCharInDigitRun = isDigit(character);
+            boolean newCharInDigitRun = Character.isDigit(character);
             if (newCharInDigitRun)
             {
                 // Continue the digit run, append the digit to the current digit run and continue
@@ -66,8 +70,9 @@ public final class NaturalSortKeyFilter extends TokenFilter {
             }
             if (!newCharInDigitRun)
             {
-                if (character == ' ') {
-                    sb.append('.');
+
+                if ((int) character <= SPACE_CHARACTER) {
+                    sb.append("!!!");
                 }
                 else {
                     sb.append(character);
@@ -89,27 +94,12 @@ public final class NaturalSortKeyFilter extends TokenFilter {
             String digitRunStr = convertToNaturalSortString(digitRun.toString());
             sb.append(digitRunStr);
         }
-        return sb.toString();
-    }
-
-    private boolean isDigit(char c)
-    {
-        switch (c)
-        {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                return true;
-            default:
-                return false;
+        String retString = sb.toString();
+        byte[] collatedBytes = collator.getCollationKey(retString).toByteArray();
+        if (collatedBytes.length > MAX_LENGTH) {
+            return Arrays.copyOf(collatedBytes, MAX_LENGTH);
         }
+        return collatedBytes;
     }
 
     private String convertToNaturalSortString(String digits)
@@ -117,7 +107,7 @@ public final class NaturalSortKeyFilter extends TokenFilter {
         int length = digits.length();
         int numZeros = MAX_NUM_DIGITS_IN_DIGIT_RUN - length;
         StringBuilder sb = new StringBuilder(MAX_NUM_DIGITS_IN_DIGIT_RUN);
-        for (int _ = 0; _ < numZeros; _++) {
+        for (int i = 0; i < numZeros; i++) {
             sb.append('0');
         }
         sb.append(digits);
